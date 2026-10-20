@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend-Demo</title>
+</head>
+
+<body>
+    <h1>Backend-Demo</h1>
+    <button id="btn" type="button">Daten laden</button>
+    <ul id="item-list"></ul>
+    <script>
+        const button = document.getElementById("btn");
+        const list = document.getElementById("item-list");
+
+        function showMessage(message) {
+            const row = document.createElement("li");
+            row.textContent = message;
+            list.replaceChildren(row);
+        }
+
+        button.addEventListener("click", async () => {
+            button.disabled = true;
+            showMessage("Daten werden geladen.");
+
+            try {
+                const response = await fetch("/api/items");
+                if (!response.ok) {
+                    throw new Error("Anfrage fehlgeschlagen");
+                }
+
+                const items = await response.json();
+                if (!Array.isArray(items)) {
+                    throw new Error("Ungültige Antwort");
+                }
+
+                list.replaceChildren();
+
+                for (const item of items) {
+                    const row = document.createElement("li");
+                    const name = document.createElement("strong");
+                    name.textContent = item.name;
+                    row.append(name, document.createTextNode(` (ID: ${item.id})`));
+
+                    if (item.description) {
+                        row.append(document.createTextNode(` — ${item.description}`));
+                    }
+
+                    list.append(row);
+                }
+
+                if (items.length === 0) {
+                    showMessage("Keine Einträge gefunden.");
+                }
+            } catch {
+                showMessage("Daten konnten nicht geladen werden.");
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>
